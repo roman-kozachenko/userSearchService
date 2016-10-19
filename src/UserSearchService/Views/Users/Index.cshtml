@@ -1,0 +1,60 @@
+﻿<p>
+    Name: <input type="text" name="query" id="query">
+    <input type="submit" value="Search" onclick="Search()" />
+</p>
+
+<div id="container"></div>
+<div id="progress" style="display: none">
+    <h4>Loading...</h4>
+</div>
+<script src="~/lib/jquery/dist/jquery.js"></script>
+
+<script type="text/javascript">
+
+    var pageSize = 10;
+    var pageIndex = 0;
+
+    $(document).ready(function () {
+        GetData();
+
+        $(window).scroll(function () {
+            if ($(window).scrollTop() ==
+               $(document).height() - $(window).height()) {
+                GetData();
+            }
+        });
+    });
+    function Search() {
+        pageIndex = 0;
+        $("#container").empty();
+        GetData(query);
+    }
+
+    function GetData() {
+        var query = document.getElementById('query').value;
+        $.ajax({
+            type: 'GET',
+            url: '/Users/GetData',
+            data: { "pageindex": pageIndex, "pagesize": pageSize, "query": query },
+            dataType: 'json',
+            success: function (result) {
+                if (result != null) {
+                    var data = result.data;
+                    for (var i = 0; i < data.length; i++) {
+                        $("#container").append("<h2>" + data[i].id + " | " + data[i].fullName + "</h2>");
+                    }
+                    pageIndex++;
+                }
+            },
+            beforeSend: function () {
+                $("#progress").show();
+            },
+            complete: function () {
+                $("#progress").hide();
+            },
+            error: function () {
+                alert("Error while retrieving data!");
+            }
+        });
+    }
+</script>
