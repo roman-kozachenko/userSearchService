@@ -2,18 +2,17 @@
 //   Copyright © eVote
 // </copyright>
 
+using System.Threading.Tasks;
 using UserSearchService.Models;
 
 namespace UserSearchService.Services
 {
     public interface IUserSearchService
     {
-        void AddUser(User user);
+        Task ReplaceUser(uint channelId, User user);
 
-        bool RemoveUser(User user);
+        Task<bool> RemoveUser(uint channelId, uint userId);
 
-        void UpdateUser(User user);
-
-        PaginationResult<User> SearchUser(string query, int skip, int take);
+        Task<PaginationResult<MatchedUser>> SearchUser(uint channelId, string query, uint skip, uint take);
     }
 }

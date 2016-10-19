@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Tarantool.Client;
+using Tarantool.Client.Model;
 using UserSearchService.Services;
 
 namespace UserSearchService
@@ -31,6 +35,9 @@ namespace UserSearchService
             // Add framework services.
             services.AddMvc();
             services.AddTransient<IUserSearchService, MockUserService>();
+
+            var box = CreateConnectedBox().GetAwaiter().GetResult();
+            services.AddSingleton(box);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -57,6 +64,22 @@ namespace UserSearchService
                     name: "default",
                     template: "{controller=Users}/{action=Index}/{id?}");
             });
+        }
+
+        private async Task<Box> CreateConnectedBox()
+        {
+            var addresses = await Dns.GetHostAddressesAsync("tarantool");
+            var box = new Box(new ConnectionOptions
+            {
+                EndPoint = new IPEndPoint(addresses.First(x => x.AddressFamily == AddressFamily.InterNetwork), 3301),
+                GuestMode = false,
+                UserName = "admin",
+                Password = "password"
+            });
+
+            await box.Connect();
+
+            return box;
         }
     }
 }

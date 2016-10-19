@@ -16,11 +16,12 @@ create_users_space = function ()
     textIndex
     --]]
   log.info("Creating users space...")
-  users = box.schema.space.create('users', { field_count = 4, format = {
+  users = box.schema.space.create('users', { field_count = 5, format = {
      [1] = {["name"] = "ballotId"},
      [2] = {["name"] = "userId"},
      [3] = {["name"] = "text"},
      [4] = {["name"] = "textIndex"},
+     [5] = {["name"] = "fullName"}
     }})
 
   log.info(users.name .. ' space was created.')

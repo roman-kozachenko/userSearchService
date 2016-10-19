@@ -2,6 +2,7 @@
 //   Copyright © eVote
 // </copyright>
 
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using UserSearchService.Services;
 
@@ -10,7 +11,7 @@ namespace UserSearchService.Controllers
     public class UsersController : Controller
     {
         private readonly IUserSearchService _userSearchService;
-
+        private const uint ChannelId = 0;
         public UsersController(IUserSearchService userSearchService)
         {
             _userSearchService = userSearchService;
@@ -21,11 +22,10 @@ namespace UserSearchService.Controllers
             return View();
         }
 
-        public ActionResult GetData(int pageIndex, int pageSize, string query = null)
+        public async Task<ActionResult> GetData(uint pageIndex, uint pageSize, string query = null)
         {
-            System.Threading.Thread.Sleep(1000);
-            var results = _userSearchService.SearchUser(query, pageIndex*pageSize, pageSize);
-            return Json(results);
+            var results = await _userSearchService.SearchUser(ChannelId, query, pageIndex * pageSize, pageSize);
+            return Json(results.Data);
         }
 
     }

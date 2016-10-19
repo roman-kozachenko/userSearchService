@@ -37,11 +37,10 @@
             url: '/Users/GetData',
             data: { "pageindex": pageIndex, "pagesize": pageSize, "query": query },
             dataType: 'json',
-            success: function (result) {
-                if (result != null) {
-                    var data = result.data;
+            success: function (data) {
+                if (data != null) {
                     for (var i = 0; i < data.length; i++) {
-                        $("#container").append("<h2>" + data[i].id + " | " + data[i].fullName + "</h2>");
+                        $("#container").append("<h2>" + data[i].userId + " | " + GetName(data[i].nameParts) + "</h2>");
                     }
                     pageIndex++;
                 }
@@ -56,5 +55,20 @@
                 alert("Error while retrieving data!");
             }
         });
+    }
+
+    function GetName(nameparts) {
+        var result = "";
+        nameparts.forEach(function (item) {
+            var itemText = item.text;
+            if (item.matchedSymbolsCount !== 0) {
+                var coloredPart = itemText.substring(0, item.matchedSymbolsCount);
+                var uncoloredPart = itemText.substring(item.matchedSymbolsCount);
+                itemText = "<font color='red'>" + coloredPart + "</font>" + uncoloredPart;
+            }
+
+            result = result + " " + itemText;
+        });
+        return result;
     }
 </script>
