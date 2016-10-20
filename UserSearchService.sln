@@ -14,6 +14,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "UserSearchService", "src\Us
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Services", "src\Services\Services.xproj", "{56F19944-27F3-41F9-A503-D0A31E642461}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "UsersGenerator", "src\UsersGenerator\UsersGenerator.xproj", "{CECDABC6-78D5-4F10-9F23-B218B78A2B2C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +30,10 @@ Global
 		{56F19944-27F3-41F9-A503-D0A31E642461}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56F19944-27F3-41F9-A503-D0A31E642461}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56F19944-27F3-41F9-A503-D0A31E642461}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CECDABC6-78D5-4F10-9F23-B218B78A2B2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CECDABC6-78D5-4F10-9F23-B218B78A2B2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CECDABC6-78D5-4F10-9F23-B218B78A2B2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CECDABC6-78D5-4F10-9F23-B218B78A2B2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -35,5 +41,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{7A519436-03E0-41EC-9144-CFAA6812161F} = {09CEEA49-4124-41B5-A735-C2C749325CAE}
 		{56F19944-27F3-41F9-A503-D0A31E642461} = {09CEEA49-4124-41B5-A735-C2C749325CAE}
+		{CECDABC6-78D5-4F10-9F23-B218B78A2B2C} = {09CEEA49-4124-41B5-A735-C2C749325CAE}
 	EndGlobalSection
 EndGlobal

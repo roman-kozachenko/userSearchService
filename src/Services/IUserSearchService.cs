@@ -2,12 +2,13 @@
 //   Copyright © eVote
 // </copyright>
 
+using System;
 using System.Threading.Tasks;
 using Services.Models;
 
 namespace Services
 {
-    public interface IUserSearchService
+    public interface IUserSearchService : IDisposable
     {
         Task ReplaceUser(uint channelId, User user);
 

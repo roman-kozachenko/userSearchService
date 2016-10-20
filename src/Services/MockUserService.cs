@@ -1,27 +1,52 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Services.Models;
 
 namespace Services
 {
     public class MockUserService : IUserSearchService
     {
-        private readonly SampleUsers _sampleUsers = new SampleUsers();
+        private readonly List<User> _users = new List<User>();
+        private const string FileName = "data.xml";
+        private readonly bool _saveData;
+
+        public MockUserService(bool saveData = false)
+        {
+            _saveData = saveData;
+            if (!File.Exists(FileName))
+            {
+                return;
+            }
+
+            using (var file = File.OpenRead(FileName))
+            {
+                try
+                {
+                    var serializer = new XmlSerializer(typeof(List<User>));
+                    _users = (List<User>)serializer.Deserialize(file);
+                }
+                catch (Exception)
+                {
+                }
+            }
+        }
 
         public async Task ReplaceUser(uint channelId, User user)
         {
             await Task.Yield();
 
-            var existing = _sampleUsers.Data.First(u => u.Id == user.Id);
+            var existing = _users.FirstOrDefault(u => u.Id == user.Id);
             if (existing != null)
             {
                 existing.FullName = user.FullName;
             }
             else
             {
-                _sampleUsers.Data.Add(user);
+                _users.Add(user);
             }
         }
 
@@ -29,10 +54,10 @@ namespace Services
         {
             await Task.Yield();
 
-            var existing = _sampleUsers.Data.First(u => u.Id == userId);
+            var existing = _users.First(u => u.Id == userId);
             if (existing != null)
             {
-                _sampleUsers.Data.Remove(existing);
+                _users.Remove(existing);
             }
         }
 
@@ -40,7 +65,7 @@ namespace Services
         {
             await Task.Yield();
 
-            var filteredUsers = FilterUsers(_sampleUsers.Data, query);
+            var filteredUsers = FilterUsers(_users, query);
             var users = filteredUsers
                     .Skip((int)skip)
                     .Take((int)take);
@@ -55,6 +80,18 @@ namespace Services
             };
 
             return result;
+        }
+
+        public void Dispose()
+        {
+            if (_saveData)
+            {
+                using (var file = File.Create(FileName))
+                {
+                    var serializer = new XmlSerializer(typeof(List<User>));
+                    serializer.Serialize(file, _users);
+                }
+            }
         }
 
         private IEnumerable<User> FilterUsers(IEnumerable<User> users, string query)

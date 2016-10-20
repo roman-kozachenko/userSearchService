@@ -32,7 +32,7 @@ namespace UserSearchService
         {
             // Add framework services.
             services.AddMvc();
-            services.AddTransient<IUserSearchService, MockUserService>();
+            services.AddSingleton<IUserSearchService, MockUserService>();
 
             var box = CreateConnectedBox().GetAwaiter().GetResult();
             services.AddSingleton(box);

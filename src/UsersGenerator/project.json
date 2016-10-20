@@ -2,11 +2,10 @@
   "version": "1.0.0-*",
   "buildOptions": {
     "debugType": "portable",
-    "emitEntryPoint": false
+    "emitEntryPoint": true
   },
   "dependencies": {
-    "System.Xml.XmlSerializer": "4.0.11",
-    "Tarantool.CSharp": "0.2.0"
+    "Services": {"target": "project"}
   },
   "frameworks": {
     "netcoreapp1.0": {

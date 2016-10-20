@@ -44,6 +44,11 @@ namespace Services
             };
         }
 
+        public void Dispose()
+        {
+            _box.Dispose();
+        }
+
         private MatchedUser CreateMatchedUser(IGrouping<uint, Tuple<uint, string, uint>> matches, string query)
         {
             var queryLength = (uint)query.Length;

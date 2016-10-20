@@ -42,7 +42,7 @@ function replace_user(channelId, userId, userFullName)
  local users = box.space.users;
   local nameParts = split(userFullName, " ")
   for i, part in ipairs(nameParts) do 
-    local userNamePart = [channelId, userId, part, i, userFullName]
+    local userNamePart = {channelId, userId, part, i, userFullName}
     users.replace(userNamePart)
   end
 end
