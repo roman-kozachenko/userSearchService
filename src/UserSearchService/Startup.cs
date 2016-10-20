@@ -66,7 +66,7 @@ namespace UserSearchService
 
         private async Task<Box> CreateConnectedBox()
         {
-            var addresses = await Dns.GetHostAddressesAsync("localhost");
+            var addresses = await Dns.GetHostAddressesAsync("tarantool");
             var box = new Box(new ConnectionOptions
             {
                 EndPoint = new IPEndPoint(addresses.First(x => x.AddressFamily == AddressFamily.InterNetwork), 3301),
