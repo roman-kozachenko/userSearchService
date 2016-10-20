@@ -5,7 +5,8 @@
     "emitEntryPoint": true
   },
   "dependencies": {
-    "Services": {"target": "project"}
+    "Services": { "target": "project" },
+    "Tarantool.CSharp": "0.2.0"
   },
   "frameworks": {
     "netcoreapp1.0": {

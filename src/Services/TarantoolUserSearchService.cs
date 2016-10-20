@@ -32,7 +32,8 @@ namespace Services
 
         public async Task<PaginationResult<MatchedUser>> SearchUser(uint channelId, string query, uint skip, uint take)
         {
-            var matchingEntries = await _box.Call<Tuple<uint, string, uint, uint>,
+            query = query ?? string.Empty;
+          var matchingEntries = await _box.Call<Tuple<uint, string, uint, uint>,
                 Tuple<uint, string, uint>>(
                 TarantoolFunctionNames.SearchUsersFunctionName, Tuple.Create(channelId, query, skip, take));
             var users = matchingEntries.Data.GroupBy(t => t.Item1).Select(t => CreateMatchedUser(t, query)).ToList();

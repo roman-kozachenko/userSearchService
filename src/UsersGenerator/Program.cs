@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using Services;
 using Services.Models;
+using Tarantool.Client;
+using Tarantool.Client.Model;
 using UsersGenerator;
 
 namespace ConsoleApplication
@@ -16,13 +21,17 @@ namespace ConsoleApplication
         {
             var names = new Names();
             var random = new Random(DateTime.UtcNow.Millisecond);
-            using (var userService = new MockUserService(true))
+
+            using (var box = CreateConnectedBox().GetAwaiter().GetResult())
             {
-                InsertUsers(names, random, userService).GetAwaiter().GetResult();
+                using (var userService = new TarantoolUserSearchService(box))
+                {
+                    InsertUsers(names, random, userService).GetAwaiter().GetResult();
+                }
             }
         }
 
-        private static async Task InsertUsers(Names names, Random random, MockUserService userService)
+        private static async Task InsertUsers(Names names, Random random, IUserSearchService userService)
         {
             for (var i = 0u; i < UsersCount; i++)
             {
@@ -47,6 +56,22 @@ namespace ConsoleApplication
             user.FullName = string.Join(" ", names);
 
             return user;
+        }
+
+        private static async Task<Box> CreateConnectedBox()
+        {
+            var addresses = await Dns.GetHostAddressesAsync("localhost");
+            var box = new Box(new ConnectionOptions
+            {
+                EndPoint = new IPEndPoint(addresses.First(x => x.AddressFamily == AddressFamily.InterNetwork), 3301),
+                GuestMode = false,
+                UserName = "admin",
+                Password = "password"
+            });
+
+            await box.Connect();
+
+            return box;
         }
     }
 }
