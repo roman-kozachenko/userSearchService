@@ -5,11 +5,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Services.Models;
 using Tarantool.Client;
 using Tarantool.Client.Model;
-using UserSearchService.Models;
 
-namespace UserSearchService.Services
+namespace Services
 {
     public class TarantoolUserSearchService : IUserSearchService
     {

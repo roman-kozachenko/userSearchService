@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UserSearchService.Models;
+using Services.Models;
 
-namespace UserSearchService.Services
+namespace Services
 {
     public class MockUserService : IUserSearchService
     {

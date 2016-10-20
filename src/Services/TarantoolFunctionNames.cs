@@ -1,7 +1,7 @@
 ﻿// <copyright file="TarantoolFunctionNames.cs" company="eVote">
 //   Copyright © eVote
 // </copyright>
-namespace UserSearchService.Services
+namespace Services
 {
     public class TarantoolFunctionNames
     {

@@ -4,7 +4,7 @@
 
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using UserSearchService.Services;
+using Services;
 
 namespace UserSearchService.Controllers
 {

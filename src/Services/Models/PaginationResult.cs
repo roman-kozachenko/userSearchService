@@ -4,7 +4,7 @@
 
 using System.Collections.Generic;
 
-namespace UserSearchService.Models
+namespace Services.Models
 {
     public class PaginationResult<T>
     {

@@ -1,7 +1,7 @@
 ﻿// <copyright file="User.cs" company="eVote">
 //   Copyright © eVote
 // </copyright>
-namespace UserSearchService.Models
+namespace Services.Models
 {
     public class User
     {

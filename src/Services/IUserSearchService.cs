@@ -3,9 +3,9 @@
 // </copyright>
 
 using System.Threading.Tasks;
-using UserSearchService.Models;
+using Services.Models;
 
-namespace UserSearchService.Services
+namespace Services
 {
     public interface IUserSearchService
     {
