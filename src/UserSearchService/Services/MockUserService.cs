@@ -25,12 +25,15 @@ namespace UserSearchService.Services
             }
         }
 
-        public async Task<bool> RemoveUser(uint channelId, uint userId)
+        public async Task RemoveUser(uint channelId, uint userId)
         {
             await Task.Yield();
 
             var existing = _sampleUsers.Data.First(u => u.Id == userId);
-            return existing != null && _sampleUsers.Data.Remove(existing);
+            if (existing != null)
+            {
+                _sampleUsers.Data.Remove(existing);
+            }
         }
 
         public async Task<PaginationResult<MatchedUser>> SearchUser(uint channelId, string query, uint skip, uint take)

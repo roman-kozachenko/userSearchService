@@ -25,18 +25,17 @@ namespace UserSearchService.Services
             await _box.Call<Tuple<uint, uint, string>, Tuple<int>>(TarantoolFunctionNames.ReplaceUserFunctionName, Tuple.Create(channelId, user.Id, user.FullName));
         }
 
-        public async Task<bool> RemoveUser(uint channelId, uint userId)
+        public async Task RemoveUser(uint channelId, uint userId)
         {
-            var result = await _box.Call<Tuple<uint, uint>, Tuple<bool>>(TarantoolFunctionNames.RemoveUserFunctionName, Tuple.Create(channelId, userId));
-            return result.Data[0].Item1;
+            await _box.Call<Tuple<uint, uint>, Tuple<bool>>(TarantoolFunctionNames.RemoveUserFunctionName, Tuple.Create(channelId, userId));
         }
-        
+
         public async Task<PaginationResult<MatchedUser>> SearchUser(uint channelId, string query, uint skip, uint take)
         {
             var matchingEntries = await _box.Call<Tuple<uint, string, uint, uint>,
-                Tuple<uint, string, uint, uint>>(
+                Tuple<uint, string, uint>>(
                 TarantoolFunctionNames.SearchUsersFunctionName, Tuple.Create(channelId, query, skip, take));
-            var users = matchingEntries.Data.GroupBy(t => t.Item1).Select(CreateMatchedUser).ToList();
+            var users = matchingEntries.Data.GroupBy(t => t.Item1).Select(t => CreateMatchedUser(t, query)).ToList();
             return new PaginationResult<MatchedUser>()
             {
                 Data = users,
@@ -45,8 +44,9 @@ namespace UserSearchService.Services
             };
         }
 
-        private MatchedUser CreateMatchedUser(IGrouping<uint, Tuple<uint, string, uint, uint>> matches)
+        private MatchedUser CreateMatchedUser(IGrouping<uint, Tuple<uint, string, uint>> matches, string query)
         {
+            var queryLength = (uint)query.Length;
             var userId = matches.Key;
             var fullName = matches.First().Item2;
             var parts = fullName.Split(' ');
@@ -59,7 +59,7 @@ namespace UserSearchService.Services
                 var namePart = new NamePart()
                 {
                     Text = parts[i],
-                    MatchedSymbolsCount = matchedPart?.Item4 ?? 0
+                    MatchedSymbolsCount = matchedPart == null ? 0 : queryLength
                 };
 
                 nameParts.Add(namePart);

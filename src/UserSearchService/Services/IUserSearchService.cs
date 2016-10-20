@@ -11,7 +11,7 @@ namespace UserSearchService.Services
     {
         Task ReplaceUser(uint channelId, User user);
 
-        Task<bool> RemoveUser(uint channelId, uint userId);
+        Task RemoveUser(uint channelId, uint userId);
 
         Task<PaginationResult<MatchedUser>> SearchUser(uint channelId, string query, uint skip, uint take);
     }
