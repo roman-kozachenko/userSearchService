@@ -159,7 +159,7 @@ function replace_user(channelId, userId, userFullName)
     local textIndeces = letter_combinations[i]
     if textIndeces ~= {} then
       for k, v in pairs(textIndeces) do
-        box.space[get_partial_names_space_name(i)]:insert({channelId, k, channelId, v})
+        box.space[get_partial_names_space_name(i)]:insert({channelId, k, userId, v})
       end
     end
   end
@@ -179,20 +179,76 @@ function remove_user(channelId, userId)
   end
 end
 
-function search_users(channelId, query, skip, take)
-  local index = box.space.users.index.channelId_text
-  log.info(string.format('Looking for %u, %q, %u, %u', channelId, query, skip, take))
-  local matchingTuples = index:select({channelId, query}, {iterator = box.index.GE, limit = take, offset = skip })
+local search_full_names = function(channelId, query, queryLength)
   local result = {}
-  for i, t in ipairs(matchingTuples) do
-    if common.start_with(t[3], query) then
-      result[#result + 1] = {t[2], t[5], t[4]} 
+  local index_search_key = query
+  local index = box.space.full_names.index.primary
+  local number_of_tuples_in_result_set = 0
+  local previous_tuple_field = ""
+  local text_field_no = 2
+  while true do
+    local number_of_tuples_since_last_yield = 0
+    local is_time_for_a_yield = false
+    -- SEE NOTE #4 "INNER LOOP: ITERATOR"
+    for _, tuple in index:pairs({channelId, index_search_key},{iterator = box.index.GE}) do
+      -- SEE NOTE #5 "INNER LOOP: BREAK IF INDEX KEY IS TOO GREAT"
+      if string.sub(tuple[text_field_no], 1, queryLength) > index_search_key then
+        break
+      end
+      -- SEE NOTE #6 "INNER LOOP: BREAK AFTER EVERY 10 TUPLES -- MAYBE"
+      number_of_tuples_since_last_yield = number_of_tuples_since_last_yield + 1
+      if (number_of_tuples_since_last_yield >= 10
+          and tuple[text_field_no] ~= previous_tuple_field) then
+        index_search_key = tuple[text_field_no]
+        is_time_for_a_yield = true
+        break
+        end
+      previous_tuple_field = tuple[text_field_no]
+      -- SEE NOTE #7 "INNER LOOP: ADD TO RESULT SET IF PATTERN MATCHES"
+      if string.sub(tuple[text_field_no],1, queryLength) == query then
+        number_of_tuples_in_result_set = number_of_tuples_in_result_set + 1
+        result[number_of_tuples_in_result_set] = tuple
+      end
     end
+    -- SEE NOTE #8 "OUTER LOOP: BREAK, OR YIELD AND CONTINUE"
+    if (is_time_for_a_yield ~= true) then
+      break
+    end
+    require('fiber').yield()
   end
-  if #result == 0 then
-    result = {0, 'Users not found!', 0}
+end
+
+function search_users(channelId, query, skip, take)
+  log.info(string.format('Looking for %u, %q, %u, %u', channelId, query, skip, take))
+  local queryLength = string.len(query)
+
+  if queryLength < min_letter_count then
+    log.info("Too short query")
+    return {}
+  end
+
+  if queryLength > max_letters_count  then
+    log.info("Too long query")
+    return search_full_names(channelId, query, queryLength)
+  end
+
+  local space = box.space[get_partial_names_space_name(queryLength)]
+  local index = space.index.primary
+
+  local matchingTuples = index:select({channelId, query}, {limit = take, offset = skip})
+  
+  local result = {}
+  for i, tuple in ipairs(matchingTuples) do
+    local userId = tuple[3]
+    local user = box.space.user_names:get{userId}
+    local fullName = user[2]
+    table.insert(result, {userId, fullName, tuple[4]})
   end
   return result
 end
 
 create_spaces()
+replace_user(0, 1, "Caleb Cadman Caleb Corwin Bartholomew Chandler")
+replace_user(0, 2, "Caleb Cadman  Corwin Bartholomew Chandler")
+replace_user(0, 3, "Bartholomew Cadman Caleb Corwin  Chandler")
+log.info(table.tostring(search_users(0, "Bartholomew", 0, 10)))
