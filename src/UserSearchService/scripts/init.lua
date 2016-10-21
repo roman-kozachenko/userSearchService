@@ -8,52 +8,176 @@ box.cfg
     log_level = 5
 }
 
-function create_users_space()
+local max_letters_count = 10
+local min_letter_count = 3
+
+local get_partial_names_space_name = function(letters_count)
+  return "partial_names_" .. letters_count
+end
+
+local create_partial_names_space = function(letters_count)
    --[[
-    channelId
+    channelId,
+    text,
     userId,
-    text
-    textIndex,
-    fullName
+    textIndeces
     --]]
-  log.info("Creating users space...")
-  users = box.schema.space.create('users', { field_count = 5, format = {
-     [1] = {["name"] = "channelId"},
-     [2] = {["name"] = "userId"},
-     [3] = {["name"] = "text"},
-     [4] = {["name"] = "textIndex"},
-     [5] = {["name"] = "fullName"}
+    local space_name = get_partial_names_space_name(letters_count)
+
+    log.info("Creating " .. space_name .. " space...")
+    space = box.schema.space.create(space_name, { field_count = 4, format = {
+      [1] = {["name"] = "channelId"},
+      [3] = {["name"] = "text"},
+      [2] = {["name"] = "userId"},
+      [4] = {["name"] = "textIndeces"}
     }})
 
-  log.info(users.name .. ' space was created.')
+    log.info(space.name .. ' space was created.')
 
-  primary = users:create_index('primary', {unique=true, type='HASH', parts={1, 'UNSIGNED', 2,'UNSIGNED', 4, 'UNSIGNED'}})
+    primary = space:create_index('primary', {unique=true, type='TREE', parts={1, 'UNSIGNED', 2, 'STR', 3, 'UNSIGNED'}})
+    log.info(primary.name .. ' index was created.')
+
+   userId_channelId = space:create_index('userId_channelId', {unique=false, type='TREE', parts={3, 'UNSIGNED', 1,'UNSIGNED'}})
+   log.info(userId_channelId.name .. ' index was created.')
+end
+
+local create_full_names_space = function()
+   --[[
+    channelId
+    text,
+    userId,
+    textIndex
+    --]]
+
+  local space_name = "full_names"
+
+  log.info("Creating " .. space_name .. " space...")
+  space = box.schema.space.create(space_name, { field_count = 4, format = {
+     [1] = {["name"] = "channelId"},
+     [2] = {["name"] = "text"},
+     [3] = {["name"] = "userId"},
+     [4] = {["name"] = "textIndex"}
+    }})
+
+  log.info(space.name .. ' space was created.')
+
+  primary = space:create_index('primary', {unique=true, type='TREE', parts={1, 'UNSIGNED', 2,'STR', 3, 'UNSIGNED'}})
   log.info(primary.name .. ' index was created.')
 
-  channelId_userId = users:create_index('channelId_userId', {unique=false, type='TREE', parts={1, 'UNSIGNED', 2,'UNSIGNED'}})
-  log.info(channelId_userId.name .. ' index was created.')
+  userId_channelId = space:create_index('userId_channelId', {unique=false, type='TREE', parts={3, 'UNSIGNED', 1,'UNSIGNED'}})
+  log.info(userId_channelId.name .. ' index was created.')
+end
 
-  channelId_text = users:create_index('channelId_text', {type='TREE', unique=false, parts={1,'UNSIGNED', 3, 'STR'}})
-  log.info(channelId_text.name .. ' index was created.')
+
+local create_user_names_space = function()
+   --[[
+    userId,
+    fullName
+    --]]
+
+  local space_name = "user_names"
+
+  log.info("Creating " .. space_name .. " space...")
+  space = box.schema.space.create(space_name, { field_count = 2, format = {
+     [1] = {["name"] = "userId"},
+     [2] = {["name"] = "fullName"}
+    }})
+
+  log.info(space.name .. ' space was created.')
+
+  primary = users:create_index('primary', {unique=true, type='HASH', parts={1, 'UNSIGNED'}})
+  log.info(primary.name .. ' index was created.')
+end
+
+local create_spaces = function()
+  box.once('create_user_names_space', create_user_names_space)
+  box.once('create_full_names_space', create_full_names_space)
+
+  for i=min_letter_count, max_letters_count do
+    local f = function()
+      create_full_names_space(i)
+    end
+    box.once('create_full_names_space_' .. i, f)
+  end
+end
+
+local remove_records(channelId, userId, space_name)
+  log.info(string.format('Removing records for userId=%u, channelId=%u from %q',userId, channelId, space_name)
+
+  local index = box.space[space_name].index.userId_channelId
+  local matchingTuples = userId_channelId_index:select({userId, channelId})
+
+  for _, tuple in ipairs(matchingTuples) do
+        common.drop_tuple(space_name, tuple)
+  end
+  log.info(string.format('%u records removed',#matchingTuples )
+end
+
+local insert_full_name(channelId, userId, text, textIndex)
+  local textLength = string.len(text)
+
+  if textLength > max_letters_count then
+    box.space.full_names:insert({channelId, text, userId, textIndex})
+  end
+end
+
+local initialize_letter_combinations()
+  local combinations = {}
+  for i=min_letter_count, max_letters_count do
+    combinations[i]={}
+  end
+
+  return combinations
+end
+
+local add_letter_combinations(combinations, text, textIndex)
+  for i=min_letter_count, math.min(string.len(text), max_letters_count) do
+    local namePart = string.sub(1, i)]
+
+    if combinations[i][namePart] == null then
+      combinations[i][namePart] = {}
+    end
+
+    table.insert(combinations[i][namePart], textIndex)
+  end
 end
 
 function replace_user(channelId, userId, userFullName)
-  local users = box.space.users;
-  log.info('Replacing user ' .. userFullName .. ' with id=' .. userId .. ' in channel with id=' .. channelId)
+  log.info(string.format('Replacing user %q with userId=%u in channelId=%u', userFullName, userId, channelId)
+
+  remove_user(channelId, userId)
+
+  box.space.user_names:replace({userId, userFullName})
+
   local nameParts = common.split_string(userFullName, ' ')
-  for i, part in ipairs(nameParts) do 
-    local userNamePart = {channelId, userId, part, i, userFullName}
-    users:replace(userNamePart)
+  local letter_combinations = initialize_letter_combinations()
+  for textIndex, text in ipairs(nameParts) do
+    insert_full_name(channelId, userId, text, textIndex)
+    add_letter_combinations(letter_combinations, text)
+  end
+
+  for i=min_letter_count, max_letters_count do
+    local textIndeces = letter_combinations[min_letter_count]
+    if #textIndeces > 0 then
+      for _, namePart in textIndeces do
+        box.space[get_partial_names_space_name(i)]:insert({channelId, namePart, channelId, textIndeces})
+      end
+    end
   end
 end
 
 function remove_user(channelId, userId)
-  local index = box.space.users.index.channelId_userId
-  local matchingTuples = index:select({channelId, userId})
+  remove_records(channelId, userId, 'full_names')
 
-  for _, tuple in ipairs(matchingTuples) do
-        common.drop_tuple('users', tuple)
-    end
+  for i=min_letter_count, max_letters_count do
+    remove_records(channelId, userId, get_partial_names_space_name(i))
+  end
+
+  local remained_records_count = box.space.full_names.index.userId_channelId:count{userId}
+  if remained_records_count == 0
+    log.info('User with id=%u is not used anymore, removing...', userId)
+    box.space.user_names:delete({userId})
+  end
 end
 
 function search_users(channelId, query, skip, take)
@@ -72,4 +196,4 @@ function search_users(channelId, query, skip, take)
   return result
 end
 
-box.once('create_users_space', create_users_space)
+create_spaces()
