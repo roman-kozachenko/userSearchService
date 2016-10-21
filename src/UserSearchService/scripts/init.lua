@@ -105,7 +105,7 @@ local remove_records = function(channelId, userId, space_name)
   log.info(string.format('Removing records for userId=%u, channelId=%u from %q',userId, channelId, space_name))
 
   local index = box.space[space_name].index.userId_channelId
-  local matchingTuples = userId_channelId_index:select({userId, channelId})
+  local matchingTuples = index:select({userId, channelId})
 
   for _, tuple in ipairs(matchingTuples) do
         common.drop_tuple(space_name, tuple)
@@ -113,7 +113,7 @@ local remove_records = function(channelId, userId, space_name)
   log.info(string.format('%u records removed',#matchingTuples ))
 end
 
-local insert_full_name = function(channelId, userId, text, textIndex)
+local insert_full_name_if_needed = function(channelId, userId, text, textIndex)
   local textLength = string.len(text)
 
   if textLength > max_letters_count then
@@ -132,8 +132,7 @@ end
 
 local add_letter_combinations = function(combinations, text, textIndex)
   for i=min_letter_count, math.min(string.len(text), max_letters_count) do
-    local namePart = string.sub(1, i)
-
+    local namePart = string.sub(text, 1, i)
     if combinations[i][namePart] == null then
       combinations[i][namePart] = {}
     end
@@ -152,15 +151,15 @@ function replace_user(channelId, userId, userFullName)
   local nameParts = common.split_string(userFullName, ' ')
   local letter_combinations = initialize_letter_combinations()
   for textIndex, text in ipairs(nameParts) do
-    insert_full_name(channelId, userId, text, textIndex)
-    add_letter_combinations(letter_combinations, text)
+    insert_full_name_if_needed(channelId, userId, text, textIndex)
+    add_letter_combinations(letter_combinations, text, textIndex)
   end
 
   for i=min_letter_count, max_letters_count do
-    local textIndeces = letter_combinations[min_letter_count]
-    if #textIndeces > 0 then
-      for _, namePart in textIndeces do
-        box.space[get_partial_names_space_name(i)]:insert({channelId, namePart, channelId, textIndeces})
+    local textIndeces = letter_combinations[i]
+    if textIndeces ~= {} then
+      for k, v in pairs(textIndeces) do
+        box.space[get_partial_names_space_name(i)]:insert({channelId, k, channelId, v})
       end
     end
   end
@@ -197,3 +196,4 @@ function search_users(channelId, query, skip, take)
 end
 
 create_spaces()
+replace_user(0,0,"Caleb Cadman Caleb Corwin Bartholomew Chandler")
