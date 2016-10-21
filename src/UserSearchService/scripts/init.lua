@@ -267,7 +267,7 @@ function search_users(channelId, query, skip, take)
   local queryLength = string.len(query)
 
   if queryLength < min_letter_count then
-    return {}
+    return {-1, "Search string is too short!", {0}}
   end
 
   if queryLength > max_letters_count  then
@@ -278,18 +278,18 @@ function search_users(channelId, query, skip, take)
 end
 
 create_spaces()
-replace_user(0, 1, "Caleb Cadman Caleb Corwin Bartholomew Chandler")
-replace_user(0, 2, "Caleb Cadman Corwin Bartholomew Chandler")
-replace_user(0, 3, "Bartholomew Cadman Caleb Corwin  Chandler")
-replace_user(0, 4, "Bartholomew Bartholomew Caleb Corwin  Chandler")
-replace_user(0, 5, "Bartholomew Cadman Bartholomew Corwin  Chandler")
-replace_user(0, 6, "Bartholomew Cadman Caleb Bartholomew  Chandler")
-replace_user(0, 7, "Bartholomew Cadman Caleb Corwin  Bartholomew")
-replace_user(0, 8, "Bartholomew Cadman Caleb Corwin  Chandler")
+-- replace_user(0, 1, "Caleb Cadman Caleb Corwin Bartholomew Chandler")
+-- replace_user(0, 2, "Caleb Cadman Corwin Bartholomew Chandler")
+-- replace_user(0, 3, "Bartholomew Cadman Caleb Corwin  Chandler")
+-- replace_user(0, 4, "Bartholomew Bartholomew Caleb Corwin  Chandler")
+-- replace_user(0, 5, "Bartholomew Cadman Bartholomew Corwin  Chandler")
+-- replace_user(0, 6, "Bartholomew Cadman Caleb Bartholomew  Chandler")
+-- replace_user(0, 7, "Bartholomew Cadman Caleb Corwin  Bartholomew")
+-- replace_user(0, 8, "Bartholomew Cadman Caleb Corwin  Chandler")
 
-log.info(table.tostring(search_users(0, "Cal", 0, 10)))
-log.info(table.tostring(search_users(0, "Cal", 0, 1)))
-log.info(table.tostring(search_users(0, "Cal", 1, 1)))
-log.info(table.tostring(search_users(0, "Cal", 2, 1)))
+-- log.info(table.tostring(search_users(0, "Cal", 0, 10)))
+-- log.info(table.tostring(search_users(0, "Cal", 0, 1)))
+-- log.info(table.tostring(search_users(0, "Cal", 1, 1)))
+-- log.info(table.tostring(search_users(0, "Cal", 2, 1)))
 
-log.info(table.tostring(search_users(0, "Bartholomew", 0, 10)))
+-- log.info(table.tostring(search_users(0, "Bartholomew", 0, 10)))

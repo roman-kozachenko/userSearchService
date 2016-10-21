@@ -34,9 +34,9 @@ namespace Services
         {
             query = query ?? string.Empty;
           var matchingEntries = await _box.Call<Tuple<uint, string, uint, uint>,
-                Tuple<uint, string, uint>>(
+                Tuple<uint, string, uint[]>>(
                 TarantoolFunctionNames.SearchUsersFunctionName, Tuple.Create(channelId, query, skip, take));
-            var users = matchingEntries.Data.GroupBy(t => t.Item1).Select(t => CreateMatchedUser(t, query)).ToList();
+            var users = matchingEntries.Data.Select(t => CreateMatchedUser(t, query)).ToList();
             return new PaginationResult<MatchedUser>()
             {
                 Data = users,
@@ -50,27 +50,27 @@ namespace Services
             _box.Dispose();
         }
 
-        private MatchedUser CreateMatchedUser(IGrouping<uint, Tuple<uint, string, uint>> matches, string query)
+        private MatchedUser CreateMatchedUser(Tuple<uint, string, uint[]> match, string query)
         {
             var queryLength = (uint)query.Length;
-            var userId = matches.Key;
-            var fullName = matches.First().Item2;
+            var userId = match.Item1;
+            var fullName = match.Item2;
             var parts = fullName.Split(' ');
 
             var nameParts = new List<NamePart>();
 
             for (var i = 0; i < parts.Length; i++)
             {
-                var matchedPart = matches.SingleOrDefault(m => m.Item3 == i + 1);
+                var matchFound = match.Item3.Any(m => m == i + 1u);
                 var namePart = new NamePart()
                 {
                     Text = parts[i],
-                    MatchedSymbolsCount = matchedPart == null ? 0 : queryLength
+                    MatchedSymbolsCount = matchFound ? queryLength : 0
                 };
 
                 nameParts.Add(namePart);
             }
-            var matchedUser = new MatchedUser()
+            var matchedUser = new MatchedUser
             {
                 UserId = userId,
                 NameParts = nameParts
