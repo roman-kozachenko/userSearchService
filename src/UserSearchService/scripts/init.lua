@@ -85,7 +85,7 @@ local create_user_names_space = function()
 
   log.info(space.name .. ' space was created.')
 
-  primary = users:create_index('primary', {unique=true, type='HASH', parts={1, 'UNSIGNED'}})
+  primary = space:create_index('primary', {unique=true, type='HASH', parts={1, 'UNSIGNED'}})
   log.info(primary.name .. ' index was created.')
 end
 
@@ -95,14 +95,14 @@ local create_spaces = function()
 
   for i=min_letter_count, max_letters_count do
     local f = function()
-      create_full_names_space(i)
+      create_partial_names_space(i)
     end
-    box.once('create_full_names_space_' .. i, f)
+    box.once('create_partial_names_space_' .. i, f)
   end
 end
 
-local remove_records(channelId, userId, space_name)
-  log.info(string.format('Removing records for userId=%u, channelId=%u from %q',userId, channelId, space_name)
+local remove_records = function(channelId, userId, space_name)
+  log.info(string.format('Removing records for userId=%u, channelId=%u from %q',userId, channelId, space_name))
 
   local index = box.space[space_name].index.userId_channelId
   local matchingTuples = userId_channelId_index:select({userId, channelId})
@@ -110,10 +110,10 @@ local remove_records(channelId, userId, space_name)
   for _, tuple in ipairs(matchingTuples) do
         common.drop_tuple(space_name, tuple)
   end
-  log.info(string.format('%u records removed',#matchingTuples )
+  log.info(string.format('%u records removed',#matchingTuples ))
 end
 
-local insert_full_name(channelId, userId, text, textIndex)
+local insert_full_name = function(channelId, userId, text, textIndex)
   local textLength = string.len(text)
 
   if textLength > max_letters_count then
@@ -121,7 +121,7 @@ local insert_full_name(channelId, userId, text, textIndex)
   end
 end
 
-local initialize_letter_combinations()
+local initialize_letter_combinations = function()
   local combinations = {}
   for i=min_letter_count, max_letters_count do
     combinations[i]={}
@@ -130,9 +130,9 @@ local initialize_letter_combinations()
   return combinations
 end
 
-local add_letter_combinations(combinations, text, textIndex)
+local add_letter_combinations = function(combinations, text, textIndex)
   for i=min_letter_count, math.min(string.len(text), max_letters_count) do
-    local namePart = string.sub(1, i)]
+    local namePart = string.sub(1, i)
 
     if combinations[i][namePart] == null then
       combinations[i][namePart] = {}
@@ -143,7 +143,7 @@ local add_letter_combinations(combinations, text, textIndex)
 end
 
 function replace_user(channelId, userId, userFullName)
-  log.info(string.format('Replacing user %q with userId=%u in channelId=%u', userFullName, userId, channelId)
+  log.info(string.format('Replacing user %q with userId=%u in channelId=%u', userFullName, userId, channelId))
 
   remove_user(channelId, userId)
 
@@ -174,7 +174,7 @@ function remove_user(channelId, userId)
   end
 
   local remained_records_count = box.space.full_names.index.userId_channelId:count{userId}
-  if remained_records_count == 0
+  if remained_records_count == 0 then
     log.info('User with id=%u is not used anymore, removing...', userId)
     box.space.user_names:delete({userId})
   end
