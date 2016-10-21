@@ -196,4 +196,3 @@ function search_users(channelId, query, skip, take)
 end
 
 create_spaces()
-replace_user(0,0,"Caleb Cadman Caleb Corwin Bartholomew Chandler")
