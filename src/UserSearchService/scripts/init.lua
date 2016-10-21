@@ -267,7 +267,7 @@ function search_users(channelId, query, skip, take)
   local queryLength = string.len(query)
 
   if queryLength < min_letter_count then
-    return {-1, "Search string is too short!", {0}}
+    return {0, "Search string is too short", {0}}
   end
 
   if queryLength > max_letters_count  then
